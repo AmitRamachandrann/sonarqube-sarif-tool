@@ -73,8 +73,8 @@ def mapIssuesToSarif(issues) {
 def convertIssuesToSarif(issues, sonarVersion = "9.9.0") {
 
     def sarifData = [
+    '$schema': 'https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/sarif-2.1/schema/sarif-schema-2.1.0.json',
         version: "2.1.0",
-        '$schema': "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/sarif-2.1/schema/sarif-schema-2.1.0.json",
         runs: [
             [
                 tool: [
@@ -105,6 +105,7 @@ def getSarifOutput(issuesJson, hotspotsJson) {
     def combinedResults = issuesSarif + hotspotsSarif
 
     def sarifData = [
+    '$schema': 'https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/sarif-2.1/schema/sarif-schema-2.1.0.json',
         version: "2.1.0",
         runs: [
             [
