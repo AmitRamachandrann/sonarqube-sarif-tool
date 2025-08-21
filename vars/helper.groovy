@@ -28,7 +28,14 @@ def mapHotspotsToIssues(hotspots) {
 // Map issues directly to SARIF results format
 def mapIssuesToSarif(issues) {
     // check the len of issues array before collecting
-    def issuesArray = issues.issues
+    def issuesArray
+    if (issues instanceof List) {
+        // If issues is already a list (from hotspots), use it directly
+        issuesArray = issues
+    } else {
+        // Otherwise, get issues.issues
+        issuesArray = issues.issues
+    }
     if (!issuesArray || issuesArray.size() == 0) {
         return []
     }
