@@ -18,7 +18,8 @@ def mapHotspotsToIssues(hotspots) {
             startLine: hotspot.textRange.startLine,
             endLine: hotspot.textRange.endLine,
             startColumn: hotspot.textRange.startOffset,
-            endColumn: hotspot.textRange.endOffset
+            endColumn: hotspot.textRange.endOffset,
+            impacts: [ "severity" : hotspot.vulnerabilityProbability.toUpperCase() ]
         ]
     }
 }
@@ -34,7 +35,11 @@ def mapIssuesToSarif(issues) {
     return issuesArray.collect { issue ->
         [
             ruleId: issue.rule,
-            message: issue.message,
+            level : issue.impacts.severity,
+            message:[
+                text: issue.message
+            ],
+            fingerprints: issue.hash ? [ "0" : issue.hash ] : null,
             locations: [
                 [
                     physicalLocation: [
@@ -46,6 +51,9 @@ def mapIssuesToSarif(issues) {
                             startColumn: issue.startColumn,
                             endLine: issue.endLine,
                             endColumn: issue.endColumn
+                            // snippet: [
+                            //     text: 
+                            // ]
                         ]
                     ]
                 ]
@@ -59,6 +67,7 @@ def convertIssuesToSarif(issues, sonarVersion = "9.9.0") {
 
     def sarifData = [
         version: "2.1.0",
+        \$schema: "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/sarif-2.1/schema/sarif-schema-2.1.0.json",
         runs: [
             [
                 tool: [
@@ -83,7 +92,7 @@ def getSarifOutput(issuesJson, hotspotsJson) {
     def hotspotsData = jsonSlurper.parseText(hotspotsJson)
 
     def issuesSarif = mapIssuesToSarif(issuesData)
-    def hotspotsSarif = mapHotspotsToIssues(hotspotsData)
+    def hotspotsSarif = mapIssuesToSarif(mapHotspotsToIssues(hotspotsData))
 
     // Combine both lists
     def combinedResults = issuesSarif + hotspotsSarif
