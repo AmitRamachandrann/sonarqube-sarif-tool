@@ -4,7 +4,12 @@ import groovy.json.JsonSlurper
 
 // Map SonarQube hotspots to issues format for SARIF conversion
 def mapHotspotsToIssues(hotspots) {
+    // check the len of issues array before collecting
+    
     def hotspotArray = hotspots.hotspots
+    if (!hotspotArray || hotspotArray.size() == 0) {
+        return []
+    }
     return hotspotArray.collect { hotspot ->
         [
             rule: hotspot.ruleKey,
@@ -18,9 +23,15 @@ def mapHotspotsToIssues(hotspots) {
     }
 }
 
+
 // Map issues directly to SARIF results format
 def mapIssuesToSarif(issues) {
-    return issues.collect { issue ->
+    // check the len of issues array before collecting
+    def issuesArray = issues.issues
+    if (!issuesArray || issuesArray.size() == 0) {
+        return []
+    }
+    return issuesArray.collect { issue ->
         [
             ruleId: issue.rule,
             message: issue.message,
