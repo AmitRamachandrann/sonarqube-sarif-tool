@@ -1,0 +1,1 @@
+Minimal shared library example
