@@ -69,27 +69,26 @@ def mapIssuesToSarif(issues) {
     }
 }
 
-// Convert issues to SARIF JSON
-def convertIssuesToSarif(issues, sonarVersion = "9.9.0") {
+// // Convert issues to SARIF JSON
+// def convertIssuesToSarif(issues, sonarVersion = "9.9.0") {
 
-    def sarifData = [
-    '$schema': 'https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/sarif-2.1/schema/sarif-schema-2.1.0.json',
-        version: "2.1.0",
-        runs: [
-            [
-                tool: [
-                    driver: [
-                        name: "SonarQube",
-                        version: sonarVersion
-                    ]
-                ],
-                results: mapIssuesToSarif(issues)
-            ]
-        ]
-    ]
-    //println JsonOutput.prettyPrint(JsonOutput.toJson(sarifData));
-    return sarifData
-}
+//     def sarifData = new LinkedHashMap()
+//     sarifData['$schema'] = 'https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/sarif-2.1/schema/sarif-schema-2.1.0.json'
+//     sarifData['version'] = "2.1.0"
+//     sarifData['runs'] = [
+//         [
+//             tool: [
+//                 driver: [
+//                     name: "SonarQube",
+//                     version: sonarVersion
+//                 ]
+//             ],
+//             results: mapIssuesToSarif(issues)
+//         ]
+//     ]
+//     //println JsonOutput.prettyPrint(JsonOutput.toJson(sarifData));
+//     return sarifData
+// }
 
 // use this function
 // Combine both issues and hotspots into a single SARIF file
@@ -104,19 +103,18 @@ def getSarifOutput(issuesJson, hotspotsJson) {
     // Combine both lists
     def combinedResults = issuesSarif + hotspotsSarif
 
-    def sarifData = [
-    '$schema': 'https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/sarif-2.1/schema/sarif-schema-2.1.0.json',
-        version: "2.1.0",
-        runs: [
-            [
-                tool: [
-                    driver: [
-                        name: "SonarQube",
-                        version: "9.9.0"
-                    ]
-                ],
-                results: combinedResults
-            ]
+    def sarifData = new LinkedHashMap()
+    sarifData['$schema'] = 'https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/sarif-2.1/schema/sarif-schema-2.1.0.json'
+    sarifData['version'] = "2.1.0"
+    sarifData['runs'] = [
+        [
+            tool: [
+                driver: [
+                    name: "SonarQube",
+                    version: "9.9.0"
+                ]
+            ],
+            results: combinedResults
         ]
     ]
     return JsonOutput.toJson(sarifData)
