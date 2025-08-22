@@ -54,7 +54,7 @@ def mapIssuesToSarif(issues, workspacePath) {
             def snippetPath = workspacePath + "/" + issue.filePath
             snippetText = getVulnerableCodeSnippet(snippetPath, issue.startLine, issue.endLine)
         } catch (Exception e) {
-            println "Error extracting snippet from ${snippetPath}: ${e.message}"
+            println("Error extracting snippet from ${snippetPath}: ${e.message}")
         }
         [
             ruleId: issue.rule,
