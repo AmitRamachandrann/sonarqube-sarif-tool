@@ -20,7 +20,7 @@ def mapHotspotsToIssues(hotspots) {
             startColumn: hotspot.textRange.startOffset,
             endColumn: hotspot.textRange.endOffset,
             impacts: [ "severity" : hotspot.vulnerabilityProbability.toUpperCase() ],
-            type: "hotspot"
+            type: "HOTSPOT"
         ]
     }
 }
