@@ -1,13 +1,9 @@
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
-class HelperGlobals {
-    static ruleIdList = []
-}
-
-// In your functions, use HelperGlobals.ruleIdList
+// In your functions, use Globals.ruleIdList
 def addRuleId(ruleId) {
-    HelperGlobals.ruleIdList << ruleId
+    Globals.ruleIdList << ruleId
 }
 
 // Map SonarQube hotspots to issues format for SARIF conversion
@@ -167,7 +163,7 @@ def fetchSonarRule(sonarHost, sonarToken, projectKey, ruleId) {
 
 def makeRuleForSarif(sonarHost, sonarToken, projectKey) {
     def rules = []
-    ruleIdList.unique().each { ruleId ->
+    Globals.ruleIdList.unique().each { ruleId ->
         def ruleResp = fetchSonarRule(sonarHost, sonarToken, projectKey, ruleId)
         def ruleJson = new JsonSlurper().parseText(ruleResp)
         def r = ruleJson.rule
