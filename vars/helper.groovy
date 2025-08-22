@@ -34,7 +34,7 @@ def mapIssueToMatch(issues) {
         [
             rule : issue.rule,
             message: issue.message,
-            filePath: issue.component ? [issue.component.split(":")[1]] : null,
+            filePath: issue.component ? issue.component.split(":")[1] : null,
             startLine: issue.textRange.startLine,
             endLine: issue.textRange.endLine,
             startColumn: issue.textRange.startOffset,
@@ -54,7 +54,7 @@ def mapIssuesToSarif(issues, workspacePath) {
             def snippetPath = workspacePath + "/" + issue.filePath
             snippetText = getVulnerableCodeSnippet(snippetPath, issue.startLine, issue.endLine)
         } catch (Exception e) {
-            println("Error extracting snippet from ${snippetPath}: ${e.message}")
+            //println("Error extracting snippet from ${snippetPath}: ${e.message}")
             snippetText = ""
         }
         [
