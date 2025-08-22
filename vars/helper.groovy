@@ -59,7 +59,7 @@ def mapIssuesToSarif(issues, workspacePath) {
                 [
                     physicalLocation: [
                         artifactLocation: [
-                            uri: issue.component.split(":")[1],
+                            uri: issue.component ? [issue.component.split(":")[1]] : null
                         ],
                         region: [
                             startLine: issue.textRange.startLine,
