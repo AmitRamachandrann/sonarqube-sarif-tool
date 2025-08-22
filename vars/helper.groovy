@@ -185,9 +185,10 @@ def makeRuleForSarif(sonarHost, sonarToken, projectKey) {
                     tags: r.tags ?: [],
                     severity: r.severity ?: "",
                     type: r.type ?: "",
-                    lang: r.lang ?: ""
+                    lang: r.lang ?: "",
+                    precision: severityMap(r.severity ?: "")
                 ],
-                precision: severityMap(r.severity ?: "")
+                
             ]
             rules << sarifRule
         }
