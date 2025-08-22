@@ -1,6 +1,11 @@
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
+def ruleIdList = []
+
+def addRuleId(ruleId) {
+    ruleIdList << ruleId
+}
 
 // Map SonarQube hotspots to issues format for SARIF conversion
 def mapHotspotsToIssues(hotspots) {
@@ -77,6 +82,7 @@ def mapIssuesToSarif(issues, workspacePath) {
             //println("Error extracting snippet from ${snippetPath}: ${e.message}")
             snippetText = ""
         }
+        addRuleId(issue.rule)
         [
             ruleId: issue.rule,
             level : issue.impacts.severity,
@@ -116,9 +122,87 @@ def getVulnerableCodeSnippet(uri, startLine, endLine) {
     return snippetText
 }
 
+// Groovy function to fetch issues from SonarQube API
+def fetchSonarIssues(sonarHost, sonarToken, projectKey) {
+    def url = "${sonarHost}/api/issues/search?componentKeys=${projectKey}&ps=500"
+    def connection = new URL(url).openConnection()
+    def authString = "${sonarToken}:"
+    def authEncBytes = authString.bytes.encodeBase64().toString()
+    connection.setRequestProperty("Authorization", "Basic ${authEncBytes}")
+    connection.setRequestProperty("Accept", "application/json")
+    connection.connect()
+    def response = connection.inputStream.text
+    return response
+}
+
+// Groovy function to fetch hotspots from SonarQube API
+def fetchSonarHotspots(sonarHost, sonarToken, projectKey) {
+    def url = "${sonarHost}/api/hotspots/search?projectKey=${projectKey}&ps=500"
+    def connection = new URL(url).openConnection()
+    def authString = "${sonarToken}:"
+    def authEncBytes = authString.bytes.encodeBase64().toString()
+    connection.setRequestProperty("Authorization", "Basic ${authEncBytes}")
+    connection.setRequestProperty("Accept", "application/json")
+    connection.connect()
+    def response = connection.inputStream.text
+    return response
+}
+
+// Groovy function to fetch Rule from SonarQube API
+def fetchSonarRule(sonarHost, sonarToken, projectKey, ruleId) {
+    def url = "${sonarHost}/api/rules/show?key=${ruleId}"
+    def connection = new URL(url).openConnection()
+    def authString = "${sonarToken}:"
+    def authEncBytes = authString.bytes.encodeBase64().toString()
+    connection.setRequestProperty("Authorization", "Basic ${authEncBytes}")
+    connection.setRequestProperty("Accept", "application/json")
+    connection.connect()
+    def response = connection.inputStream.text
+    return response
+}
+
+
+def makeRuleForSarif(sonarHost, sonarToken, projectKey) {
+    def rules = []
+    ruleIdList.unique().each { ruleId ->
+        def ruleResp = fetchSonarRule(sonarHost, sonarToken, projectKey, ruleId)
+        def ruleJson = new JsonSlurper().parseText(ruleResp)
+        def r = ruleJson.rule
+        if (r) {
+            def sarifRule = [
+                id: r.key,
+                name: r.name ?: "",
+                shortDescription: [
+                    text: r.name ?: ""
+                ],
+                fullDescription: [
+                    text: r.htmlDesc ?: ""
+                ],
+                help: [
+                    text: r.mdDesc ?: r.htmlDesc ?: "",
+                    uri: "https://sonarqube.example.com/coding_rules?open=${r.key}"
+                ],
+                properties: [
+                    tags: r.tags ?: [],
+                    severity: r.severity ?: "",
+                    type: r.type ?: "",
+                    lang: r.lang ?: ""
+                ],
+                precision: severityMap(r.severity ?: "")
+            ]
+            rules << sarifRule
+        }
+    }
+    return rules
+}
+
 // Combine both issues and hotspots into a single SARIF file
-def getSarifOutput(issuesJson, hotspotsJson, workspacePath, scannerVersion) {
+def getSarifOutput(url, token, projectKey, workspacePath, scannerVersion) {
     def jsonSlurper = new JsonSlurper()
+
+    def issuesJson = fetchSonarIssues(url, token, projectKey)
+    def hotspotsJson = fetchSonarHotspots(url, token, projectKey)
+
     def issuesData = jsonSlurper.parseText(issuesJson)
     def hotspotsData = jsonSlurper.parseText(hotspotsJson)
 
@@ -136,10 +220,12 @@ def getSarifOutput(issuesJson, hotspotsJson, workspacePath, scannerVersion) {
             tool: [
                 driver: [
                     name: "SonarQube",
-                    version: scannerVersion
+                    version: scannerVersion,
+                    rules: makeRuleForSarif(url, token, projectKey)
                 ]
             ],
-            results: combinedResults
+            results: combinedResults,
+            
         ]
     ]
     return JsonOutput.toJson(sarifData)
