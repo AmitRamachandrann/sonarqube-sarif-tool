@@ -14,7 +14,7 @@ def mapHotspotsToIssues(hotspots) {
         [
             rule: hotspot.ruleKey,
             message: hotspot.message,
-            filePath: hotspot.component.split(":")[1],
+            filePath: hotspot.component ? hotspot.component.split(":")[1] : null,
             startLine: hotspot.textRange.startLine,
             endLine: hotspot.textRange.endLine,
             startColumn: hotspot.textRange.startOffset,
@@ -25,28 +25,30 @@ def mapHotspotsToIssues(hotspots) {
     }
 }
 
+def mapIssueToMatch(issues) {
+    def issueArray = issues.issues
+    if (!issueArray || issueArray.size() == 0) {
+        return [] 
+    }
+    return issueArray.collect { issue ->
+        [
+            rule : issue.rule,
+            message: issue.message,
+            filePath: issue.component ? [issue.component.split(":")[1]] : null,
+            startLine: issue.textRange.startLine,
+            endLine: issue.textRange.endLine,
+            startColumn: issue.textRange.startOffset,
+            endColumn: issue.textRange.endOffset,
+            impacts: [ "severity" : issue.impacts.severity ],
+            type: issue.type,
+        ]
+    }
+}
+
 
 // Map issues directly to SARIF results format
 def mapIssuesToSarif(issues, workspacePath) {
-    // check the len of issues array before collecting
-    def issuesArray
-    if (issues instanceof List) {
-        // If issues is already a list (from hotspots), use it directly
-        issuesArray = issues
-    } else {
-        // Otherwise, get issues.issues
-        issuesArray = issues.issues
-    }
-    if (!issuesArray || issuesArray.size() == 0) {
-        return []
-    }
-    return issuesArray.collect { issue ->
-        // getting the file path from issues
-        def uri = issue.component ? [issue.component.split(":")[1]] : null
-        issue.filePath = uri
-        issue.startLine = issue.textRange.startLine
-        issue.endLine = issue.textRange.endLine
-
+    return issues.collect { issue ->
         def snippetText = ""
         try {
             def snippetPath = workspacePath + "/" + issue.filePath
@@ -69,9 +71,9 @@ def mapIssuesToSarif(issues, workspacePath) {
                         ],
                         region: [
                             startLine: issue.startLine,
-                            startColumn: issue.textRange.startOffset,
+                            startColumn: issue.startColumn,
                             endLine: issue.endLine,
-                            endColumn: issue.textRange.endOffset,
+                            endColumn: issue.endColumn,
                             snippet: [
                                 text: snippetText
                             ]
@@ -99,7 +101,7 @@ def getSarifOutput(issuesJson, hotspotsJson, workspacePath, scannerVersion) {
     def issuesData = jsonSlurper.parseText(issuesJson)
     def hotspotsData = jsonSlurper.parseText(hotspotsJson)
 
-    def issuesSarif = mapIssuesToSarif(issuesData, workspacePath)
+    def issuesSarif = mapIssuesToSarif(mapIssueToMatch(issuesData), workspacePath)
     def hotspotsSarif = mapIssuesToSarif(mapHotspotsToIssues(hotspotsData), workspacePath)
 
     // Combine both lists
