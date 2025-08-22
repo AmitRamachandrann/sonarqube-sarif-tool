@@ -20,6 +20,7 @@ def mapHotspotsToIssues(hotspots) {
             startColumn: hotspot.textRange.startOffset,
             endColumn: hotspot.textRange.endOffset,
             impacts: [ "severity" : hotspot.vulnerabilityProbability.toUpperCase() ]
+            type: "hotspot"
         ]
     }
 }
@@ -40,11 +41,17 @@ def mapIssuesToSarif(issues) {
         return []
     }
     return issuesArray.collect { issue ->
+        def snippetText = ""
+        try {
+            snippetText = getVulnerableCodeSnippet(issue.filePath, issue.startLine, issue.endLine)
+        } catch (Exception e) {
+            snippetText = ""
+        }
         [
             ruleId: issue.rule,
             level : issue.impacts.severity,
             message:[
-                text: issue.message
+                text: issue.message + issue.type
             ],
             fingerprints: issue.hash ? [ "0" : issue.hash ] : null,
             locations: [
@@ -58,9 +65,9 @@ def mapIssuesToSarif(issues) {
                             startColumn: issue.startColumn,
                             endLine: issue.endLine,
                             endColumn: issue.endColumn
-                            // snippet: [
-                            //     text: 
-                            // ]
+                            snippet: [
+                                text: snippetText
+                            ]
                         ]
                     ]
                 ]
@@ -69,28 +76,13 @@ def mapIssuesToSarif(issues) {
     }
 }
 
-// // Convert issues to SARIF JSON
-// def convertIssuesToSarif(issues, sonarVersion = "9.9.0") {
+// Create a function to get the vulnerable code snippet using the physical uri and the start line and end lines
+def getVulnerableCodeSnippet(uri, startLine, endLine) {
+    def fileContent = new File(uri).text
+    def lines = fileContent.split("\n")
+    return lines[startLine - 1..endLine - 1].join("\n")
+}
 
-//     def sarifData = new LinkedHashMap()
-//     sarifData['$schema'] = 'https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/sarif-2.1/schema/sarif-schema-2.1.0.json'
-//     sarifData['version'] = "2.1.0"
-//     sarifData['runs'] = [
-//         [
-//             tool: [
-//                 driver: [
-//                     name: "SonarQube",
-//                     version: sonarVersion
-//                 ]
-//             ],
-//             results: mapIssuesToSarif(issues)
-//         ]
-//     ]
-//     //println JsonOutput.prettyPrint(JsonOutput.toJson(sarifData));
-//     return sarifData
-// }
-
-// use this function
 // Combine both issues and hotspots into a single SARIF file
 def getSarifOutput(issuesJson, hotspotsJson) {
     def jsonSlurper = new JsonSlurper()
@@ -104,7 +96,7 @@ def getSarifOutput(issuesJson, hotspotsJson) {
     def combinedResults = issuesSarif + hotspotsSarif
 
     def sarifData = new LinkedHashMap()
-    sarifData['$schema'] = 'https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/sarif-2.1/schema/sarif-schema-2.1.0.json'
+    sarifData['schema'] = 'https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/sarif-2.1/schema/sarif-schema-2.1.0.json'
     sarifData['version'] = "2.1.0"
     sarifData['runs'] = [
         [
@@ -119,214 +111,3 @@ def getSarifOutput(issuesJson, hotspotsJson) {
     ]
     return JsonOutput.toJson(sarifData)
 }
-
-
-
-// def jsonString = '''
-// {
-//   "paging": {
-//     "pageIndex": 1,
-//     "pageSize": 500,
-//     "total": 3
-//   },
-//   "hotspots": [
-//     {
-//       "key": "c6070d77-1ccf-4872-a427-ed424c2128fe",
-//       "component": "sarif_test_41:Dockerfile",
-//       "project": "sarif_test_41",
-//       "securityCategory": "auth",
-//       "vulnerabilityProbability": "HIGH",
-//       "status": "TO_REVIEW",
-//       "line": 7,
-//       "message": "Make sure that using ARG to handle a secret is safe here.",
-//       "author": "aramachandran@cloudbees.com",
-//       "creationDate": "2025-07-30T08:59:24+0000",
-//       "updateDate": "2025-08-21T03:15:14+0000",
-//       "textRange": {
-//         "startLine": 7,
-//         "endLine": 7,
-//         "startOffset": 4,
-//         "endOffset": 9
-//       },
-//       "flows": [],
-//       "ruleKey": "docker:S6472",
-//       "messageFormattings": []
-//     },
-//     {
-//       "key": "744f9f06-a784-4dae-83d5-14088a9d1cb8",
-//       "component": "sarif_test_41:main.go",
-//       "project": "sarif_test_41",
-//       "securityCategory": "auth",
-//       "vulnerabilityProbability": "HIGH",
-//       "status": "TO_REVIEW",
-//       "line": 18,
-//       "message": "\"password\" detected here, make sure this is not a hard-coded credential.",
-//       "author": "aramachandran@cloudbees.com",
-//       "creationDate": "2025-07-30T08:59:24+0000",
-//       "updateDate": "2025-08-21T03:15:14+0000",
-//       "textRange": {
-//         "startLine": 18,
-//         "endLine": 18,
-//         "startOffset": 6,
-//         "endOffset": 14
-//       },
-//       "flows": [],
-//       "ruleKey": "go:S2068",
-//       "messageFormattings": []
-//     },
-//     {
-//       "key": "1eb58ac5-db37-462f-ab57-5a616ea9716a",
-//       "component": "sarif_test_41:Dockerfile",
-//       "project": "sarif_test_41",
-//       "securityCategory": "permission",
-//       "vulnerabilityProbability": "MEDIUM",
-//       "status": "TO_REVIEW",
-//       "line": 14,
-//       "message": "Copying recursively might inadvertently add sensitive data to the container. Make sure it is safe here.",
-//       "author": "aramachandran@cloudbees.com",
-//       "creationDate": "2025-07-30T08:59:24+0000",
-//       "updateDate": "2025-08-21T03:15:14+0000",
-//       "textRange": {
-//         "startLine": 14,
-//         "endLine": 14,
-//         "startOffset": 5,
-//         "endOffset": 6
-//       },
-//       "flows": [],
-//       "ruleKey": "docker:S6470",
-//       "messageFormattings": []
-//     }
-//   ],
-//   "components": [
-//     {
-//       "key": "sarif_test_41:main.go",
-//       "qualifier": "FIL",
-//       "name": "main.go",
-//       "longName": "main.go",
-//       "path": "main.go"
-//     },
-//     {
-//       "key": "sarif_test_41",
-//       "qualifier": "TRK",
-//       "name": "sarif_test_41",
-//       "longName": "sarif_test_41"
-//     },
-//     {
-//       "key": "sarif_test_41:Dockerfile",
-//       "qualifier": "FIL",
-//       "name": "Dockerfile",
-//       "longName": "Dockerfile",
-//       "path": "Dockerfile"
-//     }
-//   ]
-// }
-// '''
-
-// test data
-// def hotspots = [
-//     paging: [
-//         pageIndex: 1,
-//         pageSize: 500,
-//         total: 3
-//     ],
-//     hotspots: [
-//         [
-//             key: 'c6070d77-1ccf-4872-a427-ed424c2128fe',
-//             component: 'sarif_test_41:Dockerfile',
-//             project: 'sarif_test_41',
-//             securityCategory: 'auth',
-//             vulnerabilityProbability: 'HIGH',
-//             status: 'TO_REVIEW',
-//             line: 7,
-//             message: 'Make sure that using ARG to handle a secret is safe here.',
-//             author: 'aramachandran@cloudbees.com',
-//             creationDate: '2025-07-30T08:59:24+0000',
-//             updateDate: '2025-08-21T03:15:14+0000',
-//             textRange: [
-//                 startLine: 7,
-//                 endLine: 7,
-//                 startOffset: 4,
-//                 endOffset: 9
-//             ],
-//             flows: [],
-//             ruleKey: 'docker:S6472',
-//             messageFormattings: []
-//         ],
-//         [
-//             key: '744f9f06-a784-4dae-83d5-14088a9d1cb8',
-//             component: 'sarif_test_41:main.go',
-//             project: 'sarif_test_41',
-//             securityCategory: 'auth',
-//             vulnerabilityProbability: 'HIGH',
-//             status: 'TO_REVIEW',
-//             line: 18,
-//             message: '"password" detected here, make sure this is not a hard-coded credential.',
-//             author: 'aramachandran@cloudbees.com',
-//             creationDate: '2025-07-30T08:59:24+0000',
-//             updateDate: '2025-08-21T03:15:14+0000',
-//             textRange: [
-//                 startLine: 18,
-//                 endLine: 18,
-//                 startOffset: 6,
-//                 endOffset: 14
-//             ],
-//             flows: [],
-//             ruleKey: 'go:S2068',
-//             messageFormattings: []
-//         ],
-//         [
-//             key: '1eb58ac5-db37-462f-ab57-5a616ea9716a',
-//             component: 'sarif_test_41:Dockerfile',
-//             project: 'sarif_test_41',
-//             securityCategory: 'permission',
-//             vulnerabilityProbability: 'MEDIUM',
-//             status: 'TO_REVIEW',
-//             line: 14,
-//             message: 'Copying recursively might inadvertently add sensitive data to the container. Make sure it is safe here.',
-//             author: 'aramachandran@cloudbees.com',
-//             creationDate: '2025-07-30T08:59:24+0000',
-//             updateDate: '2025-08-21T03:15:14+0000',
-//             textRange: [
-//                 startLine: 14,
-//                 endLine: 14,
-//                 startOffset: 5,
-//                 endOffset: 6
-//             ],
-//             flows: [],
-//             ruleKey: 'docker:S6470',
-//             messageFormattings: []
-//         ]
-//     ],
-//     components: [
-//         [
-//             key: 'sarif_test_41:main.go',
-//             qualifier: 'FIL',
-//             name: 'main.go',
-//             longName: 'main.go',
-//             path: 'main.go'
-//         ],
-//         [
-//             key: 'sarif_test_41',
-//             qualifier: 'TRK',
-//             name: 'sarif_test_41',
-//             longName: 'sarif_test_41'
-//         ],
-//         [
-//             key: 'sarif_test_41:Dockerfile',
-//             qualifier: 'FIL',
-//             name: 'Dockerfile',
-//             longName: 'Dockerfile',
-//             path: 'Dockerfile'
-//         ]
-//     ]
-// ]
-
-// def escapeBackslashes(String input) {
-//     return input.replaceAll('""', '"')
-// }
-// def processedJsonString = escapeBackslashes(jsonString)
-// println(processedJsonString)
-// println(jsonString)
-
-
-
