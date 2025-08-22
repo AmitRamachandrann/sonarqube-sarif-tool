@@ -27,7 +27,7 @@ def mapHotspotsToIssues(hotspots) {
 
 
 // Map issues directly to SARIF results format
-def mapIssuesToSarif(issues) {
+def mapIssuesToSarif(issues, workspacePath) {
     // check the len of issues array before collecting
     def issuesArray
     if (issues instanceof List) {
@@ -43,7 +43,8 @@ def mapIssuesToSarif(issues) {
     return issuesArray.collect { issue ->
         def snippetText = ""
         try {
-            snippetText = getVulnerableCodeSnippet(issue.filePath, issue.startLine, issue.endLine)
+            snippetPath = workspacePath + "/" + issue.filePath
+            snippetText = getVulnerableCodeSnippet(snippetPath, issue.startLine, issue.endLine)
         } catch (Exception e) {
             snippetText = ""
         }
@@ -89,12 +90,12 @@ def getVulnerableCodeSnippet(uri, startLine, endLine) {
 }
 
 // Combine both issues and hotspots into a single SARIF file
-def getSarifOutput(issuesJson, hotspotsJson) {
+def getSarifOutput(issuesJson, hotspotsJson, workspacePath, scannerVersion) {
     def jsonSlurper = new JsonSlurper()
     def issuesData = jsonSlurper.parseText(issuesJson)
     def hotspotsData = jsonSlurper.parseText(hotspotsJson)
 
-    def issuesSarif = mapIssuesToSarif(issuesData)
+    def issuesSarif = mapIssuesToSarif(issuesData, workspacePath)
     def hotspotsSarif = mapIssuesToSarif(mapHotspotsToIssues(hotspotsData))
 
     // Combine both lists
@@ -108,7 +109,7 @@ def getSarifOutput(issuesJson, hotspotsJson) {
             tool: [
                 driver: [
                     name: "SonarQube",
-                    version: "9.9.0"
+                    version: scannerVersion
                 ]
             ],
             results: combinedResults
