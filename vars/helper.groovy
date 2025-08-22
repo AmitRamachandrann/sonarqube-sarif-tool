@@ -19,7 +19,7 @@ def mapHotspotsToIssues(hotspots) {
             endLine: hotspot.textRange.endLine,
             startColumn: hotspot.textRange.startOffset,
             endColumn: hotspot.textRange.endOffset,
-            impacts: [ "severity" : hotspot.vulnerabilityProbability.toUpperCase() ]
+            impacts: [ "severity" : hotspot.vulnerabilityProbability.toUpperCase() ],
             type: "hotspot"
         ]
     }
@@ -64,7 +64,7 @@ def mapIssuesToSarif(issues) {
                             startLine: issue.startLine,
                             startColumn: issue.startColumn,
                             endLine: issue.endLine,
-                            endColumn: issue.endColumn
+                            endColumn: issue.endColumn,
                             snippet: [
                                 text: snippetText
                             ]
