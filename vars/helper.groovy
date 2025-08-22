@@ -85,7 +85,7 @@ def getVulnerableCodeSnippet(uri, startLine, endLine) {
     }
     def lines = new File(uri).readLines()
     def snippetText = lines[(startLine - 1)..(endLine - 1)].join('\n')
-    println "Extracted snippet from ${uri} (lines ${startLine}-${endLine}):\n${snippetText}"
+    println snippetText
     return snippetText
 }
 
