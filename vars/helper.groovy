@@ -39,7 +39,7 @@ def mapIssueToMatch(issues) {
             endLine: issue.textRange.endLine,
             startColumn: issue.textRange.startOffset,
             endColumn: issue.textRange.endOffset,
-            impacts: [ "severity" : issue.impacts.severity ],
+            impacts: [ "severity" : issue.impacts[0].severity ],
             type: issue.type,
         ]
     }
