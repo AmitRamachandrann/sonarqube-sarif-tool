@@ -44,10 +44,13 @@ def mapIssuesToSarif(issues, workspacePath) {
         // getting the file path from issues
         def uri = issue.component ? [issue.component.split(":")[1]] : null
         issue.filePath = uri
+        issue.startLine = issue.textRange.startLine
+        issue.endLine = issue.textRange.endLine
+
         def snippetText = ""
         try {
             def snippetPath = workspacePath + "/" + issue.filePath
-            snippetText = getVulnerableCodeSnippet(snippetPath, issue.textRange.startLine, issue.textRange.endLine)
+            snippetText = getVulnerableCodeSnippet(snippetPath, issue.startLine, issue.endLine)
         } catch (Exception e) {
             println "Error extracting snippet from ${snippetPath}: ${e.message}"
         }
@@ -65,9 +68,9 @@ def mapIssuesToSarif(issues, workspacePath) {
                             uri: issue.filePath
                         ],
                         region: [
-                            startLine: issue.textRange.startLine,
+                            startLine: issue.startLine,
                             startColumn: issue.textRange.startOffset,
-                            endLine: issue.textRange.endLine,
+                            endLine: issue.endLine,
                             endColumn: issue.textRange.endOffset,
                             snippet: [
                                 text: snippetText
