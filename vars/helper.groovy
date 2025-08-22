@@ -25,6 +25,26 @@ def mapHotspotsToIssues(hotspots) {
     }
 }
 
+def severityMap(severity){
+    switch(severity) {
+        case "MINOR":
+            return "LOW"
+        case "MAJOR":
+            return "HIGH"
+        case "CRITICAL":
+        case "BLOCKER":
+            return "VERY_HIGH"
+        case "HIGH":
+            return "HIGH"
+        case "MEDIUM":
+            return "MEDIUM"
+        case "LOW":
+            return "LOW"
+    }
+    return "INFORMATION"
+
+}
+
 def mapIssueToMatch(issues) {
     def issueArray = issues.issues
     if (!issueArray || issueArray.size() == 0) {
@@ -39,7 +59,7 @@ def mapIssueToMatch(issues) {
             endLine: issue.textRange.endLine,
             startColumn: issue.textRange.startOffset,
             endColumn: issue.textRange.endOffset,
-            impacts: [ "severity" : issue.impacts[0].severity ],
+            impacts: [ "severity" : severityMap(issue.severity) ],
             type: issue.type,
         ]
     }
