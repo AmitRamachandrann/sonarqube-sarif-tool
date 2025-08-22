@@ -55,6 +55,7 @@ def mapIssuesToSarif(issues, workspacePath) {
             snippetText = getVulnerableCodeSnippet(snippetPath, issue.startLine, issue.endLine)
         } catch (Exception e) {
             println("Error extracting snippet from ${snippetPath}: ${e.message}")
+            snippetText = ""
         }
         [
             ruleId: issue.rule,
@@ -88,7 +89,7 @@ def mapIssuesToSarif(issues, workspacePath) {
 // Create a function to get the vulnerable code snippet using the physical uri and the start line and end lines
 def getVulnerableCodeSnippet(uri, startLine, endLine) {
     if (!uri || !(new File(uri).exists())) {
-        return
+        return new Exception("File not found: ${uri}")
     }
     def lines = new File(uri).readLines()
     def snippetText = lines[(startLine - 1)..(endLine - 1)].join('\n')
