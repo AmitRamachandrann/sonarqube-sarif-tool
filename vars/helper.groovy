@@ -41,6 +41,9 @@ def mapIssuesToSarif(issues, workspacePath) {
         return []
     }
     return issuesArray.collect { issue ->
+        // getting the file path from issues
+        def uri = issue.component ? [issue.component.split(":")[1]] : null
+        issue.filePath = uri
         def snippetText = ""
         try {
             def snippetPath = workspacePath + "/" + issue.filePath
@@ -59,7 +62,7 @@ def mapIssuesToSarif(issues, workspacePath) {
                 [
                     physicalLocation: [
                         artifactLocation: [
-                            uri: issue.component ? [issue.component.split(":")[1]] : null
+                            uri: issue.filePath
                         ],
                         region: [
                             startLine: issue.textRange.startLine,
