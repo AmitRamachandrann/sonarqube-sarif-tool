@@ -1,7 +1,7 @@
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
-def ruleIdList = []
+@Field def ruleIdList = []
 
 def addRuleId(ruleId) {
     ruleIdList << ruleId
