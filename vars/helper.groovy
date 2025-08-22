@@ -51,7 +51,7 @@ def mapIssuesToSarif(issues) {
             ruleId: issue.rule,
             level : issue.impacts.severity,
             message:[
-                text: issue.message + issue.type
+                text: issue.type + ': ' + issue.message
             ],
             fingerprints: issue.hash ? [ "0" : issue.hash ] : null,
             locations: [
@@ -78,9 +78,14 @@ def mapIssuesToSarif(issues) {
 
 // Create a function to get the vulnerable code snippet using the physical uri and the start line and end lines
 def getVulnerableCodeSnippet(uri, startLine, endLine) {
-    def fileContent = new File(uri).text
-    def lines = fileContent.split("\n")
-    return lines[startLine - 1..endLine - 1].join("\n")
+    if (!uri || !(new File(uri).exists())) {
+        println "File not found: ${uri}"
+        return
+    }
+    def lines = new File(uri).readLines()
+    def snippetText = lines[(startLine - 1)..(endLine - 1)].join('\n')
+    println "Extracted snippet from ${uri} (lines ${startLine}-${endLine}):\n${snippetText}"
+    return snippetText
 }
 
 // Combine both issues and hotspots into a single SARIF file
