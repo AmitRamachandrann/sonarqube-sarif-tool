@@ -96,7 +96,7 @@ def getSarifOutput(issuesJson, hotspotsJson, workspacePath, scannerVersion) {
     def hotspotsData = jsonSlurper.parseText(hotspotsJson)
 
     def issuesSarif = mapIssuesToSarif(issuesData, workspacePath)
-    def hotspotsSarif = mapIssuesToSarif(mapHotspotsToIssues(hotspotsData))
+    def hotspotsSarif = mapIssuesToSarif(mapHotspotsToIssues(hotspotsData), workspacePath)
 
     // Combine both lists
     def combinedResults = issuesSarif + hotspotsSarif
