@@ -43,10 +43,10 @@ def mapIssuesToSarif(issues, workspacePath) {
     return issuesArray.collect { issue ->
         def snippetText = ""
         try {
-            snippetPath = workspacePath + "/" + issue.filePath
+            def snippetPath = workspacePath + "/" + issue.filePath
             snippetText = getVulnerableCodeSnippet(snippetPath, issue.startLine, issue.endLine)
         } catch (Exception e) {
-            snippetText = ""
+            println "Error extracting snippet from ${snippetPath}: ${e.message}"
         }
         [
             ruleId: issue.rule,
