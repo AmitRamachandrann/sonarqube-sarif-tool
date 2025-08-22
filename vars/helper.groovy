@@ -80,12 +80,10 @@ def mapIssuesToSarif(issues, workspacePath) {
 // Create a function to get the vulnerable code snippet using the physical uri and the start line and end lines
 def getVulnerableCodeSnippet(uri, startLine, endLine) {
     if (!uri || !(new File(uri).exists())) {
-        println "File not found: ${uri}"
         return
     }
     def lines = new File(uri).readLines()
     def snippetText = lines[(startLine - 1)..(endLine - 1)].join('\n')
-    println snippetText
     return snippetText
 }
 
