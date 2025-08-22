@@ -1,11 +1,13 @@
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
-import groovy.transform.Field
 
-@Field def ruleIdList = []
+class HelperGlobals {
+    static ruleIdList = []
+}
 
+// In your functions, use HelperGlobals.ruleIdList
 def addRuleId(ruleId) {
-    ruleIdList << ruleId
+    HelperGlobals.ruleIdList << ruleId
 }
 
 // Map SonarQube hotspots to issues format for SARIF conversion
