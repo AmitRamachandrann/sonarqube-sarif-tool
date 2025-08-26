@@ -213,7 +213,7 @@ def getSarifOutput(url, token, projectKey, workspacePath, scannerVersion) {
     def combinedResults = issuesSarif + hotspotsSarif
 
     def sarifData = new LinkedHashMap()
-    sarifData['schema'] = 'https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/sarif-2.1/schema/sarif-schema-2.1.0.json'
+    sarifData['\$schema'] = 'https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/sarif-2.1/schema/sarif-schema-2.1.0.json'
     sarifData['version'] = "2.1.0"
     sarifData['runs'] = [
         [
